@@ -1,0 +1,24 @@
+{
+    "name": "pvettori/router",
+    "description": "A simple router.",
+    "version": "0.0",
+    "authors": [
+        {
+            "name": "Piero Vettori",
+            "email": "pierovettoriproject@gmail.com"
+        }
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "PVproject\\Routing\\": "src/"
+        }
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^6.0||^7.0",
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    }
+}
