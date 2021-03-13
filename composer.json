@@ -1,7 +1,7 @@
 {
     "name": "pvettori/router",
     "description": "A simple router.",
-    "version": "0.0",
+    "version": "0.1.0",
     "authors": [
         {
             "name": "Piero Vettori",
@@ -9,6 +9,19 @@
         }
     ],
     "license": "MIT",
+    "keywords": [
+        "http",
+        "psr",
+        "psr-7",
+        "request",
+        "response",
+        "rest",
+        "route",
+        "router",
+        "routing",
+        "web app",
+        "web service"
+    ],
     "autoload": {
         "psr-4": {
             "PVproject\\Routing\\": "src/"

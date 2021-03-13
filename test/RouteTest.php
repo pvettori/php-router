@@ -42,7 +42,7 @@ class RouteTest extends TestCase
         $this->assertTrue($route->matches($request));
     }
 
-    public function testCanMatchPathParemeters()
+    public function testCanMatchPathParameters()
     {
         $request = new Request('GET', 'http://localhost/some/path');
         $route = Route::get('/some/{param}', function () {});
@@ -50,14 +50,25 @@ class RouteTest extends TestCase
         $this->assertEquals(['param' => 'path'], $pathParams);
     }
 
-    public function testCanMatchPathParemetersWithRegex()
+    public function testDoesNotMatchParameterThis()
     {
         $request = new Request('GET', 'http://localhost/some/path');
-        $route1 = Route::get('/some/{param:\d+}', function () {});
-        $route2 = Route::get('/some/{param:\w+}', function () {});
-        $this->assertFalse($route1->matches($request, $pathParams));
-        $this->assertTrue($route2->matches($request, $pathParams));
-        $this->assertEquals(['param' => 'path'], $pathParams);
+        $route = Route::get('/some/{this}', function () {});
+        $this->assertFalse($route->matches($request, $pathParams));
+    }
+
+    public function testCanMatchPathParametersWithRegex()
+    {
+        $request = new Request('GET', 'http://localhost/some/path');
+        $this->assertFalse(Route::get('/some/{param:\d+}', function () {})->matches($request));
+        $this->assertTrue(Route::get('/some/{param:\w+}', function () {})->matches($request));
+    }
+
+    public function testDoesNotMatchParametersWithInvalidRegex()
+    {
+        $request = new Request('GET', 'http://localhost/some/^path');
+        $this->assertFalse(Route::get('/some/{param:^\w*}', function () {})->matches($request));
+        $this->assertTrue(Route::get('/some/{param:\^\w*}', function () {})->matches($request));
     }
 
     public function testThrowsExceptionOnInvalidMethod()

@@ -10,11 +10,20 @@ class Route
 
     private static $allowedMethods = ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
     protected $action;
-    protected $methods;
+    protected $methods = [];
+    protected $middleware = [];
     protected $name;
     protected $path;
     protected $pathPattern;
 
+    /**
+     * @param string   $path    The route path.
+     *                          Path parameters must be enclosed in curly braces.
+     * @param callable $action  A function to call if the route matches the request.
+     * @param array    $methods [optional] The methods that the route should match.
+     *                          If empty then the route matches any method.
+     * @param string   $name    [optional] A name for the route.
+     */
     public function __construct(string $path, callable $action, array $methods = [], string $name = null)
     {
         $methods = array_map(function ($method) {
@@ -51,6 +60,14 @@ class Route
     }
 
     /**
+     * @return array
+     */
+    public function getMiddleware(): array
+    {
+        return $this->middleware;
+    }
+
+    /**
      * @return string|null
      */
     public function getName(): ?string
@@ -82,7 +99,7 @@ class Route
         $pathPattern = sprintf('/^%s$/', static::parsePath($this->path));
 
         if (
-            preg_match($pathPattern, $path, $matches) &&
+            preg_match($pathPattern, urldecode($path), $matches) &&
             (empty($this->methods) || in_array($method, $this->methods))
         ) {
             $pathParams = array_filter($matches, function ($key) { return is_string($key); }, ARRAY_FILTER_USE_KEY);
@@ -91,6 +108,37 @@ class Route
         }
 
         return false;
+    }
+
+    /**
+     * Set route middleware.
+     *
+     * @param callable $middleware
+     *
+     * @return Route
+     */
+    public function withMiddleware($middleware): Route
+    {
+        $middleware = func_get_args();
+        foreach ($middleware as &$handler) {
+            $handler = (array) $handler;
+            if (is_string($handler[0]) && is_a($handler[0], Middleware::class)) {
+                $handler[0] = new $handler[0];
+                continue;
+            }
+            if (is_callable($handler[0])) {
+                continue;
+            }
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid argument 1 for: %s(); expected array of handlers',
+                __METHOD__
+            ));
+        }
+
+        $clone = clone $this;
+        $clone->middleware = $middleware;
+
+        return $clone;
     }
 
     /**
@@ -135,8 +183,10 @@ class Route
         $chunks = explode('/', $path);
 
         foreach ($chunks as &$chunk) {
-            if (preg_match('/^\{(?<name>[a-zA-Z_]\w*)(?:\:(?<pattern>(\\[\{\}\^\$]|[^\{\}\^\$])*))?\}$/', $chunk, $matches)) {
-                $chunk = sprintf('(?<%s>%s?)', $matches['name'], $matches['pattern'] ?? '.*');
+            if (preg_match('/^\{(?<name>[a-zA-Z_]\w*)(?:\:(?<pattern>(\\\\[\{\}\^\$]|[^\{\}\^\$\/])*))?\}$/', $chunk, $matches)) {
+                if ('this' !== strtolower($matches['name'])) {
+                    $chunk = sprintf('(?<%s>%s)', $matches['name'], $matches['pattern'] ?? '[^\/]*');
+                }
             }
         }
 

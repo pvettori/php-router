@@ -50,13 +50,13 @@ class RouterTest extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testCanSetDomain()
+    public function testCanSetPrefix()
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/some/path';
 
         $router = new Router();
-        $router->setDomain('/some');
+        $router->setPrefix('/some');
         $router->setRoute('/some/path', function () { return 'not found'; });
         $router->setRoute('/path', function () { return 'found'; });
         $this->assertEquals('found', $router->run());
@@ -80,16 +80,59 @@ class RouterTest extends TestCase
     /**
      * @runInSeparateProcess
      */
+    public function testCanGroupRoutes()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/group/path';
+
+        $router = new Router();
+        $router->addRouteGroup('/group', [
+            Route::get('/path', function ($request) { return $request->getUri()->getPath(); })
+        ]);
+        $this->assertEquals('/group/path', $router->run());
+    }
+
+
+    /**
+     * @runInSeparateProcess
+     */
     public function testCanInjectArguments()
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/some/path';
 
         $result = Router::create()
-            ->addRoute(Route::get('/some/{param}', function ($param, $request) { return func_get_args(); }))
+            ->addRoute(Route::get('/some/{param}', function ($param, $request, $route) { return func_get_args(); }))
             ->run();
         $this->assertIsArray($result);
         $this->assertEquals('path', $result[0]);
         $this->assertInstanceOf(RequestInterface::class, $result[1]);
+        $this->assertInstanceOf(Route::class, $result[2]);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testCanRunMiddleware()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/some/path';
+
+        function change_method($request, $handler, $method) {
+            $request = $request->withMethod($method);
+            return $handler($request);
+        }
+
+        $result = Router::create()
+            ->addRoute(
+                Route::get('/some/{param}', function ($param, $request) {
+                    return [$param, $request->getMethod()];
+                })->withMiddleware(
+                    ['change_method', 'PATCH'],
+                    ['change_method', 'POST']
+                )
+            )
+            ->run();
+        $this->assertEquals(['path', 'POST'], $result);
     }
 }
