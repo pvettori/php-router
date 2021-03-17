@@ -1,5 +1,5 @@
 # Router
-[![Latest Version](https://img.shields.io/badge/version-0.1-orange)](https://github.com/pvettori/router/releases)
+[![Latest Version](https://img.shields.io/badge/version-0.1.2-orange)](https://github.com/pvettori/router/releases)
 ![PHP Version](https://img.shields.io/badge/php-%3E%3D7.1-blue)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](https://github.com/pvettori/router/blob/master/LICENSE)
 
@@ -7,6 +7,17 @@ A simple router utility for applications.
 
 Web applications are, in their essence, software that respond to an HTTP request.  
 This simple router offers a quick and easy way to define the routes of your application.  
+
+## Contents
+1. [Quick start](#quick-start)  
+    1a. [Installation](#installation)  
+    1b. [Use example](#use-example)  
+2. [Usage](#usage)  
+3. [Advanced Usage](#advanced-usage)  
+4. [Reference](#reference)  
+    4a. [PVproject\Routing\Middleware](#pvproject\routing\middleware)  
+    4b. [PVproject\Routing\Route](#pvproject\routing\route)  
+    4a. [PVproject\Routing\Router](#pvproject\routing\router)  
 
 ## Quick start
 ### Installation
@@ -118,6 +129,17 @@ $router = Router::create()->addRouteGroup('/admin', [
 
 ## Reference
 
+### PVproject\Routing\Middleware
+Abstract class to be extend in order to help create middleware classes.
+
+#### **Middleware** Methods
+##### `__invoke(RequestInterface $request, callable $handler): ResponseInterface`
+The only required method of a Middleware class.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$request`|*RequestInterface*|The server request object (modified by previous middleware).|
+|`$handler`|*callable*|The next middleware or route action.|
+
 ### PVproject\Routing\Route
 A class representing a single route.  
 The Route object is immutable.
@@ -133,6 +155,8 @@ Create a new Route.
 |`$name`|*string*|Optional.<br>A name for the route.|
 ##### `getAction(): callable`
 Returns the route action function.
+##### `getAttributes(): array`
+Returns the route attributes.
 ##### `getMetohds(): array`
 Returns the route methods.
 ##### `getMiddleware(): array`
@@ -147,8 +171,17 @@ Check if the route matches a given request object.
 |:-|:-|:-|
 |`$request`|*RequestInterface*|A request object.|
 |`&$pathParams`|*array*|Optional.<br>An array populated with the defined path parameters.|
+##### `withAttributes(array $attributes): Route`
+Return a new instance with an added attributes.  
+Attributes are passed by name as arguments to the action.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$attributes`|*array*|An associative array containing attributes.<br>Attribute names must match this regex: `^[a-zA-Z_][a-zA-Z0-9_]*$`.|
 ##### `withMiddleware($middleware [, $middleware] [, ...])`
 Returns a new Route object with middleware assigned to it.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$middleware`|*string|callable*|A middleware class or function.|
 ##### `withName(string $name): Route`
 Returns a new Route object with the specified name.
 |Argument|Type|Description|
@@ -211,6 +244,11 @@ Subsequent routes are not affected by the group prefix.
 |`$prefix`|*string*|The grouped routes prefix.|
 |`$routes`|*array*|The grouped routes.|
 |`$middleware`|*array*|An array of middleware applied to all routes in the group.|
+##### `run(array $arguments = [])`
+Run the route matching.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$arguments`|*array*|Associative array of arguments injected into the action function. Route attributes and path parameters are also injected as arguments.<br>Route attributes have precendence over run arguments.<br>Path parameters have precendence over Route attributes and run arguments.|
 ##### `setRoute(string $path, callable $action, array $methods = [], string $name = null): Route`
 Adds a route and returns the Route object.  
 See [Route::__construct()](#route-methods) for details.

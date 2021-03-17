@@ -1,9 +1,13 @@
 <?php
 
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use PVproject\Routing\Route;
 use PVproject\Routing\Router;
+
+require_once __DIR__.'/MiddlewareClass.php';
 
 class RouterTest extends TestCase
 {
@@ -113,7 +117,28 @@ class RouterTest extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testCanRunMiddleware()
+    public function testCanRunMiddlewareClasses()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/some/path';
+
+        $response = Router::create()
+            ->addRoute(
+                Route::get('/some/{param}', function () {
+                    return new Response(201);
+                })->withMiddleware(
+                    ['\MiddlewareClass']
+                )
+            )
+            ->run();
+        $this->assertInstanceOf(ResponseInterface::class, $response);
+        $this->assertEquals(201, $response->getStatusCode());
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testCanRunMiddlewareFunctions()
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/some/path';
@@ -123,7 +148,7 @@ class RouterTest extends TestCase
             return $handler($request);
         }
 
-        $result = Router::create()
+        $response = Router::create()
             ->addRoute(
                 Route::get('/some/{param}', function ($param, $request) {
                     return [$param, $request->getMethod()];
@@ -133,6 +158,6 @@ class RouterTest extends TestCase
                 )
             )
             ->run();
-        $this->assertEquals(['path', 'POST'], $result);
+        $this->assertEquals(['path', 'POST'], $response);
     }
 }

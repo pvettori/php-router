@@ -10,6 +10,7 @@ class Route
 
     private static $allowedMethods = ['GET', 'PUT', 'POST', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
     protected $action;
+    protected $attributes = [];
     protected $methods = [];
     protected $middleware = [];
     protected $name;
@@ -49,6 +50,14 @@ class Route
     public function getAction(): callable
     {
         return $this->action;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
     }
 
     /**
@@ -111,9 +120,35 @@ class Route
     }
 
     /**
+     * Return a new instance with an added attributes.
+     * Attributes are passed by name as arguments to the action.
+     *
+     * @param array $attributes An associative array containing attributes.
+     *                          Attribute names must match this regex: ^[a-zA-Z_][a-zA-Z0-9_]*$.
+     *
+     * @return Route
+     */
+    public function withAttributes(array $attributes): Route
+    {
+        foreach ($attributes as $name => $value) {
+            if (!is_string($name) || !preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Invalid argument 1 for: %s(); invalid attribute name found',
+                    __METHOD__
+                ));
+            }
+        }
+
+        $clone = clone $this;
+        $clone->attributes[$name] = $value;
+
+        return $clone;
+    }
+
+    /**
      * Set route middleware.
      *
-     * @param callable $middleware
+     * @param string|callable $middleware
      *
      * @return Route
      */
@@ -122,11 +157,19 @@ class Route
         $middleware = func_get_args();
         foreach ($middleware as &$handler) {
             $handler = (array) $handler;
-            if (is_string($handler[0]) && is_a($handler[0], Middleware::class)) {
-                $handler[0] = new $handler[0];
+            $handler = [
+                'function' => array_shift($handler),
+                'extra_arguments' => $handler,
+            ];
+            if (
+                is_string($handler['function']) &&
+                class_exists($handler['function']) &&
+                method_exists($instance = new $handler['function'], '__invoke')
+            ) {
+                $handler['function'] = $instance;
                 continue;
             }
-            if (is_callable($handler[0])) {
+            if (is_callable($handler['function'])) {
                 continue;
             }
             throw new \InvalidArgumentException(sprintf(

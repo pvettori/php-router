@@ -1,8 +1,10 @@
 <?php
 
-Use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Request;
 use PHPUnit\Framework\TestCase;
 use PVproject\Routing\Route;
+
+require_once __DIR__.'/MiddlewareClass.php';
 
 class RouteTest extends TestCase
 {
@@ -25,6 +27,31 @@ class RouteTest extends TestCase
         $route = Route::get('/', function () {});
         $this->assertInstanceOf(Route::class, $route);
         $this->assertEquals(['GET'], $route->getMetohds());
+    }
+
+    public function testCanSetAttributes()
+    {
+        $attributes = ['key' => 'value'];
+        $route = Route::get('/', function () {})->withAttributes($attributes);
+        $this->assertEquals($attributes, $route->getAttributes());
+    }
+
+    public function testCanSetFunctionAsMiddleware()
+    {
+        $route = Route::get('/', function () {})->withMiddleware(function () {});
+        $this->assertIsCallable($route->getMiddleware()[0]['function']);
+    }
+
+    public function testCanSetFunctionNameAsMiddleware()
+    {
+        $route = Route::get('/', function () {})->withMiddleware('strtolower');
+        $this->assertIsCallable($route->getMiddleware()[0]['function']);
+    }
+
+    public function testCanSetMiddlewareClassNameAsMiddleware()
+    {
+        $route = Route::get('/', function () {})->withMiddleware('\MiddlewareClass');
+        $this->assertIsCallable($route->getMiddleware()[0]['function']);
     }
 
     public function testCanSetRouteNameImmutable()

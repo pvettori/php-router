@@ -60,65 +60,51 @@ class Router
 
     /**
      * Run the route matching.
+     *
+     * @param array $arguments [optional] Associative array of arguments injected into the action function.
+     *                         Route attributes and path parameters are also injected as arguments.
+     *                         Route attributes have precendence over run arguments.
+     *                         Path parameters have precendence over Route attributes and run arguments.
      */
-    public function run()
+    public function run(array $arguments = [])
     {
-        $request = static::$serverRequest;
-        $pathParams = [];
         $action = $this->fallback;
+        $pathParams = [];
+        $request = static::$serverRequest;
 
         /** @var Route $route */
         foreach ($this->routes as $route) {
             if ($route->matches($request, $pathParams)) {
                 $action = $route->getAction();
+                $arguments = array_merge($arguments, $route->getAttributes());
                 break;
             }
         }
+        $arguments = array_merge($arguments, $pathParams);
 
         if ($action) {
-            $handlers = [];
-            $defaultArguments = compact('request');
+            $middleware = [];
+            $arguments = array_merge($arguments, compact('request'));
             if (isset($route)) {
-                $defaultArguments['route'] = $route;
-                $handlers = $route->getMiddleware();
+                $arguments['route'] = $route;
+                $middleware = $route->getMiddleware();
             }
 
-            $prepareArguments = function (array $defaultArguments = []) use ($action, $pathParams) {
-                $reflectionFunction = new \ReflectionFunction($action);
-                $reflectionArguments = $reflectionFunction->getParameters();
-                $arguments = [];
-                foreach ($reflectionArguments as $argument) {
-                    $argumentName = $argument->getName();
-                    if ($value = $pathParams[$argumentName] ?? null) {
-                        $arguments[$argumentName] = $value;
-                    } elseif ($value = $defaultArguments[$argumentName]) {
-                        $arguments[$argumentName] = $value;
-                    } else {
-                        $arguments[$argumentName] = $argument->getDefaultValue();
-                    }
-                }
-
-                return $arguments;
-            };
-
-            if ($handlers) {
-                $handlers = array_reverse(array_values($handlers));
-                foreach ($handlers as $index => &$handler) {
-                    $next = $handlers[$index - 1] ?? function ($request) use ($action, $defaultArguments, $prepareArguments) {
-                        $defaultArguments['request'] = $request;
-                        $arguments = array_values($prepareArguments($defaultArguments));
-                        return $action(...$arguments);
+            if ($middleware) {
+                $middleware = array_reverse(array_values($middleware));
+                foreach ($middleware as $index => &$handler) {
+                    $next = $middleware[$index - 1]['function'] ?? function ($request) use ($action, $arguments) {
+                        return $action(...static::prepareNamedArguments($action, array_merge($arguments, compact('request'))));
                     };
-                    $handler = function ($request) use ($handler, $next) {
-                        $handler = (array) $handler;
-                        $fn = array_shift($handler);
-                        return $fn($request, $next, ...$handler);
+                    $handler['function'] = function ($request) use ($handler, $next) {
+                        return $handler['function']($request, $next, ...$handler['extra_arguments']);
                     };
                 }
-                $response = call_user_func(end($handlers), $request);
-            } else {
-                $response = call_user_func_array($action, $prepareArguments($defaultArguments));
+                $action = end($middleware)['function'];
+                $arguments = compact('request');
             }
+
+            $response = static::callWithNamedArguments($action, $arguments);
         }
 
         return $response ?? null;
@@ -229,5 +215,38 @@ class Router
         }
 
         return $route;
+    }
+
+    /**
+     * Call a function with arguments in the correct order.
+     *
+     * @param string|callable $function   The function that recieves the arguments.
+     * @param array           $parameters [optional] An associative array of possible function arguments.
+     *
+     * @return mixed
+     */
+    private static function callWithNamedArguments($function, array $parameters = [])
+    {
+        return call_user_func_array($function, static::prepareNamedArguments($function, $parameters));
+    }
+
+    /**
+     * Prepare a function's arguments in the correct order.
+     *
+     * @param string|callable $function   The function that recieves the arguments.
+     * @param array           $parameters [optional] An associative array of possible function arguments.
+     *
+     * @return array
+     */
+    private static function prepareNamedArguments($function, array $parameters = []): array
+    {
+        $reflectionFunction = new \ReflectionFunction($function);
+        $arguments = [];
+        foreach ($reflectionFunction->getParameters() as $argument) {
+            $argumentName = $argument->getName();
+            $arguments[$argumentName] = $parameters[$argumentName] ?? $argument->getDefaultValue();
+        }
+
+        return array_values($arguments);
     }
 }
