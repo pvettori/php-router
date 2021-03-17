@@ -76,4 +76,10 @@ class RouteTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $route = new Route('/', function () {}, ['INVALID']);
     }
+
+    public function testNonParameterPathSegmentsAreEscaped()
+    {
+        $request = new Request('GET', 'http://localhost/some/path+');
+        $this->assertTrue(Route::get('/some/path ', function () {})->matches($request));
+    }
 }

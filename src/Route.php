@@ -180,16 +180,16 @@ class Route
      */
     protected static function parsePath(string $path): string
     {
-        $chunks = explode('/', $path);
+        $segments = explode('/', $path);
 
-        foreach ($chunks as &$chunk) {
-            if (preg_match('/^\{(?<name>[a-zA-Z_]\w*)(?:\:(?<pattern>(\\\\[\{\}\^\$]|[^\{\}\^\$\/])*))?\}$/', $chunk, $matches)) {
-                if ('this' !== strtolower($matches['name'])) {
-                    $chunk = sprintf('(?<%s>%s)', $matches['name'], $matches['pattern'] ?? '[^\/]*');
-                }
+        foreach ($segments as &$segment) {
+            if (preg_match('/^\{(?<name>(?!this(\:|\}))[a-zA-Z_]\w*)(\:(?<pattern>(\\\\[\{\}\^\$]|[^\{\}\^\$\/])+))?\}$/', $segment, $matches)) {
+                $segment = sprintf('(?<%s>%s)', $matches['name'], $matches['pattern'] ?? '[^\/]*');
+            } else {
+                $segment = preg_quote($segment, '/');
             }
         }
 
-        return implode('\/', $chunks);
+        return implode('\/', $segments);
     }
 }

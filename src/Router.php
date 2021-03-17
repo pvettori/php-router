@@ -12,17 +12,30 @@ class Router
     protected $prefix = '';
     protected $routes = [];
 
-    public function __construct()
+    /**
+     * Create a new instance of Router.
+     *
+     * @param array $config [optional]
+     */
+    public function __construct(array $config = [])
     {
         static::$serverRequest = static::$serverRequest ?? ServerRequest::fromGlobals();
+
+        if (is_callable($fallback = $config['fallback'] ?? null)) {
+            $this->fallback = $fallback;
+        }
+
+        if (is_string($prefix = $config['prefix'] ?? null)) {
+            $this->prefix = $prefix;
+        }
     }
 
     /**
      * @return Router
      */
-    public static function create(): Router
+    public static function create(array $config = []): Router
     {
-        return new static();
+        return new static($config);
     }
 
     /**
@@ -112,34 +125,6 @@ class Router
     }
 
     /**
-     * Set a prefix for the new routes.
-     *
-     * @param string $prefix
-     *
-     * @return Router
-     */
-    public function setPrefix(string $prefix = null): Router
-    {
-        $this->prefix = preg_replace('/\/$/', '', '/'.preg_replace('/(^\/|\/$)/', '', (string) $prefix));
-
-        return $this;
-    }
-
-    /**
-     * Set a fallback route.
-     *
-     * @param callable $action
-     *
-     * @return Router
-     */
-    public function setFallback(callable $action): Router
-    {
-        $this->fallback = $action;
-
-        return $this;
-    }
-
-    /**
      * Add routes grouped by prefix.
      *
      * @param array  $routes
@@ -188,6 +173,34 @@ class Router
         } else {
             $this->routes[] = $route;
         }
+
+        return $this;
+    }
+
+    /**
+     * Set a fallback route.
+     *
+     * @param callable $action
+     *
+     * @return Router
+     */
+    public function setFallback(callable $action): Router
+    {
+        $this->fallback = $action;
+
+        return $this;
+    }
+
+    /**
+     * Set a prefix for the new routes.
+     *
+     * @param string $prefix
+     *
+     * @return Router
+     */
+    public function setPrefix(string $prefix = null): Router
+    {
+        $this->prefix = preg_replace('/\/$/', '', '/'.preg_replace('/(^\/|\/$)/', '', (string) $prefix));
 
         return $this;
     }
