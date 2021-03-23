@@ -79,6 +79,7 @@ class Router
                 $arguments = array_merge($arguments, $route->getAttributes());
                 break;
             }
+            $route = null;
         }
         $arguments = array_merge($arguments, $pathParams);
 
@@ -133,7 +134,7 @@ class Router
             }
 
             if ($middleware) {
-                $route = $route->withMiddleware($middleware);
+                $route = $route->withMiddleware(...$middleware);
             }
 
             $this->addRoute($route);

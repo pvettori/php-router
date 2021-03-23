@@ -10,6 +10,11 @@ use PVproject\Routing\Router;
 require_once __DIR__.'/InvokableClass.php';
 require_once __DIR__.'/MiddlewareClass.php';
 
+function change_method($request, $handler, $method) {
+    $request = $request->withMethod($method);
+    return $handler($request);
+}
+
 class RouterTest extends TestCase
 {
     public function testCanBeCreated()
@@ -160,11 +165,6 @@ class RouterTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/some/path';
 
-        function change_method($request, $handler, $method) {
-            $request = $request->withMethod($method);
-            return $handler($request);
-        }
-
         $response = Router::create()
             ->addRoute(
                 Route::get('/some/{param}', function ($param, $request) {
@@ -176,5 +176,24 @@ class RouterTest extends TestCase
             )
             ->run();
         $this->assertEquals(['path', 'POST'], $response);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testRegressionAgainstGhostRoute()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/some/path';
+
+        $response = Router::create()
+            ->addRouteGroup('/', [
+                Route::get('/some/other/path', function ($request) { return $request->getMethod(); })
+            ], [
+                ['change_method', 'POST']
+            ])
+            ->setFallback(function ($request) { return $request->getMethod(); })
+            ->run();
+        $this->assertEquals('GET', $response);
     }
 }
