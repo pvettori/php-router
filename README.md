@@ -74,6 +74,11 @@ $router->setRoute('/login' function () {
 ```
 
 ## Advanced Usage
+The Route `$action` argument accepts the name of an invokable class (*a class with the magic method `__invoke()`*).  
+```php
+$route = Route::get('/path', \InvokableClass::class);
+$route = Router::create()->setRoute('/', \InvokableClass::class, ['GET']);
+```
 A Route can have middleware assigned to it.  
 Middleware functions and classes must all accept at least two arguments, the first being the server request (modified by the previous middleware) and the second being the next handler.
 ```php
@@ -113,7 +118,8 @@ function middleware_function($request, $handler, $extra) {
 
 $route = Route::create('/path', function ($request) { return $response; })
     ->withMiddleware(
-        ['middleware_function', 'extra_argument']
+        ['middleware_function', 'extra_argument'],
+        'MiddewareClass'
     );
 ```
 Routes can also be grouped by prefix:
@@ -145,12 +151,12 @@ A class representing a single route.
 The Route object is immutable.
 
 #### **Route** Methods
-##### `__construct(string $path, callable $action, array $methods = [], string $name = null)`
+##### `__construct(string $path, $action, array $methods = [], string $name = null)`
 Create a new Route.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$path`|*string*|The route path.<br>Path parameters can be declared with braces (ex.: "`/path/{param}`").<br>*NOTE: Parameter names start with a letter or underscore, followed by any number of letters, numbers, or underscores.*<br>Path parameters can also be restricted by appending a colon and a regex to the parameter name (ex.: "`/path/{param:\d+}`"). <br>*NOTE: The prameter name cannot be "this" as it would be injected as the reserved word `$this`.* <br>*NOTE: The regex does not accept the `/` character and the `{` , `}` , `^` and `$` metacharacters.* |
-|`$action`|*callable*|A function that gets executed if the route matches the current server request.|
+|`$action`|*mixed*|A function, function name or invokable class name that gets executed if the route matches the current server request.|
 |`$methods`|*array*|Optional.<br>An array of HTTP request methods.<br>Valid methods are: "`GET`", "`PUT`", "`POST`", "`PATCH`", "`DELETE`", "`HEAD`", "`OPTIONS`". If not declared then the route matches any method.|
 |`$name`|*string*|Optional.<br>A name for the route.|
 ##### `getAction(): callable`
@@ -181,7 +187,7 @@ Attributes are passed by name as arguments to the action.
 Returns a new Route object with middleware assigned to it.
 |Argument|Type|Description|
 |:-|:-|:-|
-|`$middleware`|*string|callable*|A middleware class or function.|
+|`$middleware`|*string\|callable*|A middleware class or function.<br>If extra arguments need to be passed to the middleware then the definition can be expressed as an array with the first argument being the middleware class or function and the subsequent arguments being the extra arguments in exact order.|
 ##### `withName(string $name): Route`
 Returns a new Route object with the specified name.
 |Argument|Type|Description|
@@ -194,17 +200,17 @@ Returns a new Route object with the specified path.
 |`$path`|*string*|The route path.<br>See [Route::__construct()](#route-methods) for details.|
 
 #### **Route** Factory Methods
-##### `Route::create(string $path, callable $action, array $methods = [])`
+##### `Route::create(string $path, $action, array $methods = [])`
 Create a new Route.
-##### `Route::get(string $path, callable $action)`
+##### `Route::get(string $path, $action)`
 Create a new Route with the "`GET`" method.
-##### `Route::put(string $path, callable $action)`
+##### `Route::put(string $path, $action)`
 Create a new Route with the "`PUT`" method.
-##### `Route::post(string $path, callable $action)`
+##### `Route::post(string $path, $action)`
 Create a new Route with the "`POST`" method.
-##### `Route::patch(string $path, callable $action)`
+##### `Route::patch(string $path, $action)`
 Create a new Route with the "`PATCH`" method.
-##### `Route::delete(string $path, callable $action)`
+##### `Route::delete(string $path, $action)`
 Create a new Route with the "`DELETE`" method.
 
 ### PVproject\Routing\Router
@@ -225,11 +231,11 @@ Routes delcared prior to this method are not affected.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$prefix`|*string*|Optional.<br>The path prefix.<br>*NOTE: calling `->setPrefix()` without argument removes the prefix.*|
-##### `setFallback(callable $action): Router`
-Set an action function that gets called if no route match is found.
+##### `setFallback($action): Router`
+Set an action that gets executed when no route match is found.
 |Argument|Type|Description|
 |:-|:-|:-|
-|`$action`|*callable*|The action function.|
+|`$action`|*mixed*|The fallback action.|
 ##### `addRoute(Route $route): Router`
 Add a Route.
 |Argument|Type|Description|
@@ -249,7 +255,7 @@ Run the route matching.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$arguments`|*array*|Associative array of arguments injected into the action function. Route attributes and path parameters are also injected as arguments.<br>Route attributes have precendence over run arguments.<br>Path parameters have precendence over Route attributes and run arguments.|
-##### `setRoute(string $path, callable $action, array $methods = [], string $name = null): Route`
+##### `setRoute(string $path, $action, array $methods = [], string $name = null): Route`
 Adds a route and returns the Route object.  
 See [Route::__construct()](#route-methods) for details.
 

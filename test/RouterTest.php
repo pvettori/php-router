@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use PVproject\Routing\Route;
 use PVproject\Routing\Router;
 
+require_once __DIR__.'/InvokableClass.php';
 require_once __DIR__.'/MiddlewareClass.php';
 
 class RouterTest extends TestCase
@@ -79,6 +80,22 @@ class RouterTest extends TestCase
         $router->setRoute('/some/path', function () { return 'not found'; });
         $router->setRoute('/some/other/path', function () { return 'not found'; });
         $this->assertEquals('found', $router->run());
+    }
+
+    public function testCanSetInvokableClassNameAsFallback()
+    {
+        try {
+            Router::create()->setFallback(\InvokableClass::class);
+            $this->assertTrue(true);
+        } catch (\Exception $ex) {
+            $this->fail($ex->getMessage());
+        }
+    }
+
+    public function testThrowsExceptionOnInvalidFallback()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Router::create()->setFallback(\stdClass::class);
     }
 
     /**

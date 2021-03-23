@@ -166,12 +166,23 @@ class Router
     /**
      * Set a fallback route.
      *
-     * @param callable $action
+     * @param callable|string $action A function (or invokable class name) to call if the route matches the request.
      *
      * @return Router
      */
-    public function setFallback(callable $action): Router
+    public function setFallback($action): Router
     {
+        if (is_callable($action)) {
+            /* PASS */
+        } elseif (is_string($action) && class_exists($action) && is_callable($instance = new $action)) {
+            $action = $instance;
+        } else {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid argument 1 for: %s(); expected calable or string, %s given',
+                __METHOD__, is_object($action) ? get_class($action) : gettype($action)
+            ));
+        }
+
         $this->fallback = $action;
 
         return $this;
@@ -195,16 +206,16 @@ class Router
      * Set a route.
      * If a domain has been defined then it is prepended to the path.
      *
-     * @param string   $path    The route path.
-     *                          Path parameters must be enclosed in curly braces.
-     * @param callable $action  A function to call if the route matches the request.
-     * @param array    $methods [optional] The methods that the route should match.
-     *                          If empty then the route matches any method.
-     * @param string   $name    [optional] A name for the route.
+     * @param string          $path    The route path.
+     *                                 Path parameters must be enclosed in curly braces.
+     * @param callable|string $action  A function (or invokable class name) to call if the route matches the request.
+     * @param array           $methods [optional] The methods that the route should match.
+     *                                 If empty then the route matches any method.
+     * @param string          $name    [optional] A name for the route.
      *
      * @return Route
      */
-    public function setRoute(string $path, callable $action, array $methods = [], string $name = null): Route
+    public function setRoute(string $path, $action, array $methods = [], string $name = null): Route
     {
         $route = Route::create($this->prefix.$path, $action, $methods, $name);
 

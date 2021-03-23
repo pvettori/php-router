@@ -4,6 +4,7 @@ use GuzzleHttp\Psr7\Request;
 use PHPUnit\Framework\TestCase;
 use PVproject\Routing\Route;
 
+require_once __DIR__.'/InvokableClass.php';
 require_once __DIR__.'/MiddlewareClass.php';
 
 class RouteTest extends TestCase
@@ -13,6 +14,20 @@ class RouteTest extends TestCase
         $route = new Route('/', function () {});
         $this->assertInstanceOf(Route::class, $route);
         $this->assertEquals('/', $route->getPath());
+    }
+
+    public function testCanBeCreatedFromInvokableClassName()
+    {
+        $route = new Route('/', \InvokableClass::class);
+        $this->assertInstanceOf(Route::class, $route);
+        $this->assertIsCallable($route->getAction());
+    }
+
+    public function testThrowsExceptionWhenGettingInvalidAction()
+    {
+        $route = new Route('/', \stdClass::class);
+        $this->expectException(\UnexpectedValueException::class);
+        $route->getAction();
     }
 
     public function testCanBeCreatedWithFactoryMethodCreate()

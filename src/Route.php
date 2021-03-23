@@ -18,15 +18,22 @@ class Route
     protected $pathPattern;
 
     /**
-     * @param string   $path    The route path.
-     *                          Path parameters must be enclosed in curly braces.
-     * @param callable $action  A function to call if the route matches the request.
-     * @param array    $methods [optional] The methods that the route should match.
-     *                          If empty then the route matches any method.
-     * @param string   $name    [optional] A name for the route.
+     * @param string          $path    The route path.
+     *                                 Path parameters must be enclosed in curly braces.
+     * @param callable|string $action  A function (or invokable class) to call if the route matches the request.
+     * @param array           $methods [optional] The methods that the route should match.
+     *                                 If empty then the route matches any method.
+     * @param string          $name    [optional] A name for the route.
      */
-    public function __construct(string $path, callable $action, array $methods = [], string $name = null)
+    public function __construct(string $path, $action, array $methods = [], string $name = null)
     {
+        if (!is_callable($action) && !is_string($action)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Invalid argument 2 for: %s(); expected calable or string, %s given',
+                __METHOD__, is_object($action) ? get_class($action) : gettype($action)
+            ));
+        }
+
         $methods = array_map(function ($method) {
             return strtoupper((string) $method);
         }, $methods);
@@ -49,7 +56,20 @@ class Route
      */
     public function getAction(): callable
     {
-        return $this->action;
+        $action = $this->action;
+        if (is_callable($action)) {
+            /* PASS */
+        } elseif (is_string($action) && class_exists($action) && is_callable($instance = new $action())) {
+            $action = $instance;
+        } else {
+            throw new \UnexpectedValueException(sprintf(
+                'Unexpected value for: %s::$action; expected callable or class name, %s found',
+                __CLASS__, is_object($action) ? get_class($action) : gettype($action)
+            ));
+        }
+
+        /* @var callable $action */
+        return $action;
     }
 
     /**
@@ -164,7 +184,7 @@ class Route
             if (
                 is_string($handler['function']) &&
                 class_exists($handler['function']) &&
-                method_exists($instance = new $handler['function'], '__invoke')
+                method_exists($instance = new $handler['function'](), '__invoke')
             ) {
                 $handler['function'] = $instance;
                 continue;
