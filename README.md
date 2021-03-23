@@ -57,6 +57,8 @@ $route = Route::get('/path/{param}', function ($param) {
 ```
 > Note that path parameters are automatically passed as arguments with the same name to the action function (in no particular order).
 
+> Path parameters can also be injected as associative array through the `$parameters` argument.
+
 Or have access to the request object in your route action (the router handles a PSR-7 Request object):
 ```php
 $route = Route::get('/path', function ($request) {
@@ -242,8 +244,11 @@ Create a new Router.
 Get the a named route.
 ##### `getRoutes(): array`
 Get the defined routes.
-##### `run()`
+##### `run(array $arguments = [])`
 Run the router.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$arguments`|*array*|An associative array of extra arguments injected into the action function.<br>Arguments injected by default are: `$parameters`, `$request`, `$route`.|
 ##### `setPrefix(string $prefix = null): Router`
 Set a route prefix. The prefix is prepended to the path of every subsequent route.  
 Routes delcared prior to this method are not affected.

@@ -87,7 +87,7 @@ class Router
             }
             $route = null;
         }
-        $arguments = array_merge($arguments, $pathParams);
+        $arguments = array_merge($arguments, ['parameters' => $pathParams], $pathParams);
 
         if ($action) {
             $middleware = [];

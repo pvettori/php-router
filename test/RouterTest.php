@@ -127,12 +127,13 @@ class RouterTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/some/path';
 
         $result = Router::create()
-            ->addRoute(Route::get('/some/{param}', function ($param, $request, $route) { return func_get_args(); }))
+            ->addRoute(Route::get('/some/{param}', function ($param, $parameters, $request, $route) { return func_get_args(); }))
             ->run();
         $this->assertIsArray($result);
         $this->assertEquals('path', $result[0]);
-        $this->assertInstanceOf(RequestInterface::class, $result[1]);
-        $this->assertInstanceOf(Route::class, $result[2]);
+        $this->assertEquals(['param' => 'path'], $result[1]);
+        $this->assertInstanceOf(RequestInterface::class, $result[2]);
+        $this->assertInstanceOf(Route::class, $result[3]);
     }
 
     /**
