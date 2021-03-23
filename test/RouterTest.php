@@ -118,7 +118,6 @@ class RouterTest extends TestCase
         $this->assertEquals('/group/path', $router->run());
     }
 
-
     /**
      * @runInSeparateProcess
      */
@@ -176,6 +175,25 @@ class RouterTest extends TestCase
             )
             ->run();
         $this->assertEquals(['path', 'POST'], $response);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function testCanRunWithExtraArguments()
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/some/path';
+
+        $response = Router::create([
+            'arguments' => [
+                'extra1' => 'value1',
+                'extra2' => 'value2',
+            ],
+        ])
+            ->addRoute(Route::get('/some/path', function ($extra1, $extra2) { return [$extra1, $extra2]; }))
+            ->run(['extra2' => 'value3']);
+        $this->assertEquals(['value1', 'value3'], $response);
     }
 
     /**

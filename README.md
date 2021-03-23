@@ -132,6 +132,22 @@ $router = Router::create()->addRouteGroup('/admin', [
     'MiddewareClass'
 ]);
 ```
+Extra arguments can be provided to the router.  
+Such arguments are automatically injected in the route action.
+```php
+// arguments passed on Router creation
+$router = Router::create([
+    'arguments' => [
+        'extra1' => 'value1',
+        'extra2' => 'value2',
+    ]
+]);
+// arguments passed on Router run
+$router = Router::create()->run([
+    'extra1' => 'value1',
+    'extra2' => 'value2',
+]);
+```
 
 ## Reference
 
@@ -217,8 +233,11 @@ Create a new Route with the "`DELETE`" method.
 The router class.
 
 #### **Router** Methods
-##### `__construct()`
+##### `__construct(array $config = [])`
 Create a new Router.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$config`|*array*|A configuration array.<br>Available configuration options: `arguments`, `fallback`, `prefix`.|
 ##### `getRoute(string $name): ?Route`
 Get the a named route.
 ##### `getRoutes(): array`

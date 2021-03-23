@@ -8,6 +8,7 @@ class Router
 {
     /** @var ServerRequest */
     private static $serverRequest;
+    protected $arguments = [];
     protected $fallback;
     protected $prefix = '';
     protected $routes = [];
@@ -20,6 +21,10 @@ class Router
     public function __construct(array $config = [])
     {
         static::$serverRequest = static::$serverRequest ?? ServerRequest::fromGlobals();
+
+        if (is_array($arguments = $config['arguments'] ?? null)) {
+            $this->arguments = $arguments;
+        }
 
         if (is_callable($fallback = $config['fallback'] ?? null)) {
             $this->fallback = $fallback;
@@ -69,6 +74,7 @@ class Router
     public function run(array $arguments = [])
     {
         $action = $this->fallback;
+        $arguments = array_merge($this->arguments, $arguments);
         $pathParams = [];
         $request = static::$serverRequest;
 
@@ -252,11 +258,14 @@ class Router
      */
     private static function prepareNamedArguments($function, array $parameters = []): array
     {
-        $reflectionFunction = new \ReflectionFunction($function);
+        $reflectionFunction = is_object($function)
+            ? new \ReflectionMethod($function, '__invoke')
+            : new \ReflectionFunction($function);
         $arguments = [];
         foreach ($reflectionFunction->getParameters() as $argument) {
             $argumentName = $argument->getName();
-            $arguments[$argumentName] = $parameters[$argumentName] ?? $argument->getDefaultValue();
+            $argumentDefault = $argument->isOptional() ? $argument->getDefaultValue() : null;
+            $arguments[$argumentName] = $parameters[$argumentName] ?? $argumentDefault;
         }
 
         return array_values($arguments);
