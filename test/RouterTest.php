@@ -7,8 +7,8 @@ use Psr\Http\Message\ResponseInterface;
 use PVproject\Routing\Route;
 use PVproject\Routing\Router;
 
-require_once __DIR__.'/InvokableClass.php';
-require_once __DIR__.'/MiddlewareClass.php';
+require_once __DIR__.'/assets/InvokableClass.php';
+require_once __DIR__.'/assets/MiddlewareClass.php';
 
 function change_method($request, $handler, $method) {
     $request = $request->withMethod($method);

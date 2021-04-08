@@ -1,5 +1,5 @@
-# Router
-[![Latest Version](https://img.shields.io/badge/version-0.1.2-orange)](https://github.com/pvettori/router/releases)
+# Router PHP
+[![Latest Version](https://img.shields.io/badge/version-0.1.4-orange)](https://github.com/pvettori/router/releases)
 ![PHP Version](https://img.shields.io/badge/php-%3E%3D7.1-blue)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](https://github.com/pvettori/router/blob/master/LICENSE)
 
@@ -17,7 +17,7 @@ This simple router offers a quick and easy way to define the routes of your appl
 4. [Reference](#reference)  
     4a. [PVproject\Routing\Middleware](#pvproject\routing\middleware)  
     4b. [PVproject\Routing\Route](#pvproject\routing\route)  
-    4a. [PVproject\Routing\Router](#pvproject\routing\router)  
+    4c. [PVproject\Routing\Router](#pvproject\routing\router)  
 
 ## Quick start
 ### Installation
@@ -76,10 +76,18 @@ $router->setRoute('/login' function () {
 ```
 
 ## Advanced Usage
-The Route `$action` argument accepts the name of an invokable class (*a class with the magic method `__invoke()`*).  
+In order to restrict a route to respond to specific methods an array of methods can be passed as additional argument.
 ```php
-$route = Route::get('/path', \InvokableClass::class);
-$route = Router::create()->setRoute('/', \InvokableClass::class, ['GET']);
+$route = Route::create('/path', function () { /* code */ }, ['PUT', 'PATCH']);
+// alternative way
+$route = Router::create()->setRoute('path/', function () { /* code */ }, ['PUT', 'PATCH']);
+```
+
+The Route `$action` argument accepts the name of a class method or the name of an invokable class (*a class with the magic method `__invoke()`*).  
+```php
+$route = Route::get('/path', '\ActionClass->action');
+$route = Route::get('/path', '\ActionClass::staticAction');
+$route = Route::get('/path', '\InvokableClass');
 ```
 A Route can have middleware assigned to it.  
 Middleware functions and classes must all accept at least two arguments, the first being the server request (modified by the previous middleware) and the second being the next handler.
@@ -174,7 +182,7 @@ Create a new Route.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$path`|*string*|The route path.<br>Path parameters can be declared with braces (ex.: "`/path/{param}`").<br>*NOTE: Parameter names start with a letter or underscore, followed by any number of letters, numbers, or underscores.*<br>Path parameters can also be restricted by appending a colon and a regex to the parameter name (ex.: "`/path/{param:\d+}`"). <br>*NOTE: The prameter name cannot be "this" as it would be injected as the reserved word `$this`.* <br>*NOTE: The regex does not accept the `/` character and the `{` , `}` , `^` and `$` metacharacters.* |
-|`$action`|*mixed*|A function, function name or invokable class name that gets executed if the route matches the current server request.|
+|`$action`|*mixed*|A function, function name, class method name or invokable class name that gets executed if the route matches the current server request.|
 |`$methods`|*array*|Optional.<br>An array of HTTP request methods.<br>Valid methods are: "`GET`", "`PUT`", "`POST`", "`PATCH`", "`DELETE`", "`HEAD`", "`OPTIONS`". If not declared then the route matches any method.|
 |`$name`|*string*|Optional.<br>A name for the route.|
 ##### `getAction(): callable`
@@ -284,5 +292,8 @@ Adds a route and returns the Route object.
 See [Route::__construct()](#route-methods) for details.
 
 #### **Router** Factory Methods
-##### `Router::create()`
+##### `Router::create(array $config = [])`
 Create a new Router.
+|Argument|Type|Description|
+|:-|:-|:-|
+|`$config`|*array*|See [Router::__construct()](#router-methods).|
