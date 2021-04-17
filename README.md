@@ -1,6 +1,6 @@
-# Router PHP
-[![Latest Version](https://img.shields.io/badge/version-0.1.4-orange)](https://github.com/pvettori/router/releases)
-![PHP Version](https://img.shields.io/badge/php-%3E%3D7.1-blue)
+# PHP Router: app routing for humans
+[![Latest Version](https://img.shields.io/badge/version-0.1.5-orange)](https://github.com/pvettori/router/releases)
+[![PHP Version](https://img.shields.io/badge/php-%E2%89%A57.1-blue)](https://www.php.net/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](https://github.com/pvettori/router/blob/master/LICENSE)
 
 A simple router utility for applications.  
@@ -159,25 +159,25 @@ $router = Router::create()->run([
 ]);
 ```
 
-## Reference
+# Reference
 
-### PVproject\Routing\Middleware
+## PVproject\Routing\Middleware
 Abstract class to be extend in order to help create middleware classes.
 
-#### **Middleware** Methods
-##### `__invoke(RequestInterface $request, callable $handler): ResponseInterface`
+### **Middleware** Methods
+#### `__invoke(RequestInterface $request, callable $handler): ResponseInterface`
 The only required method of a Middleware class.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$request`|*RequestInterface*|The server request object (modified by previous middleware).|
 |`$handler`|*callable*|The next middleware or route action.|
 
-### PVproject\Routing\Route
+## PVproject\Routing\Route
 A class representing a single route.  
 The Route object is immutable.
 
-#### **Route** Methods
-##### `__construct(string $path, $action, array $methods = [], string $name = null)`
+### **Route** Methods
+#### `__construct(string $path, $action, [array $methods], [string $name])`
 Create a new Route.
 |Argument|Type|Description|
 |:-|:-|:-|
@@ -185,95 +185,95 @@ Create a new Route.
 |`$action`|*mixed*|A function, function name, class method name or invokable class name that gets executed if the route matches the current server request.|
 |`$methods`|*array*|Optional.<br>An array of HTTP request methods.<br>Valid methods are: "`GET`", "`PUT`", "`POST`", "`PATCH`", "`DELETE`", "`HEAD`", "`OPTIONS`". If not declared then the route matches any method.|
 |`$name`|*string*|Optional.<br>A name for the route.|
-##### `getAction(): callable`
+#### `getAction(): callable`
 Returns the route action function.
-##### `getAttributes(): array`
+#### `getAttributes(): array`
 Returns the route attributes.
-##### `getMetohds(): array`
+#### `getMetohds(): array`
 Returns the route methods.
-##### `getMiddleware(): array`
+#### `getMiddleware(): array`
 Returns the route middleware.
-##### `getName(): ?string`
+#### `getName(): ?string`
 Returns the route name.
-##### `getPath(): string`
+#### `getPath(): string`
 Returns the declared route path.
-##### `matches(RequestInterface $request, array &$pathParams = null): bool`
+#### `matches(RequestInterface $request, [array &$pathParams]): bool`
 Check if the route matches a given request object.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$request`|*RequestInterface*|A request object.|
 |`&$pathParams`|*array*|Optional.<br>An array populated with the defined path parameters.|
-##### `withAttributes(array $attributes): Route`
+#### `withAttributes(array $attributes): Route`
 Return a new instance with an added attributes.  
 Attributes are passed by name as arguments to the action.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$attributes`|*array*|An associative array containing attributes.<br>Attribute names must match this regex: `^[a-zA-Z_][a-zA-Z0-9_]*$`.|
-##### `withMiddleware($middleware [, $middleware] [, ...])`
+#### `withMiddleware($middleware [, $middleware] [, ...])`
 Returns a new Route object with middleware assigned to it.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$middleware`|*string\|callable*|A middleware class or function.<br>If extra arguments need to be passed to the middleware then the definition can be expressed as an array with the first argument being the middleware class or function and the subsequent arguments being the extra arguments in exact order.|
-##### `withName(string $name): Route`
+#### `withName(string $name): Route`
 Returns a new Route object with the specified name.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$name`|*string*|The route name.|
-##### `withPath(string $path): Route`
+#### `withPath(string $path): Route`
 Returns a new Route object with the specified path.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$path`|*string*|The route path.<br>See [Route::__construct()](#route-methods) for details.|
 
-#### **Route** Factory Methods
-##### `Route::create(string $path, $action, array $methods = [])`
+### **Route** Factory Methods
+#### `Route::create(string $path, $action, [array $methods])`
 Create a new Route.
-##### `Route::get(string $path, $action)`
+#### `Route::get(string $path, $action)`
 Create a new Route with the "`GET`" method.
-##### `Route::put(string $path, $action)`
+#### `Route::put(string $path, $action)`
 Create a new Route with the "`PUT`" method.
-##### `Route::post(string $path, $action)`
+#### `Route::post(string $path, $action)`
 Create a new Route with the "`POST`" method.
-##### `Route::patch(string $path, $action)`
+#### `Route::patch(string $path, $action)`
 Create a new Route with the "`PATCH`" method.
-##### `Route::delete(string $path, $action)`
+#### `Route::delete(string $path, $action)`
 Create a new Route with the "`DELETE`" method.
 
-### PVproject\Routing\Router
+## PVproject\Routing\Router
 The router class.
 
-#### **Router** Methods
-##### `__construct(array $config = [])`
+### **Router** Methods
+#### `__construct([array $config])`
 Create a new Router.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$config`|*array*|A configuration array.<br>Available configuration options: `arguments`, `fallback`, `prefix`.|
-##### `getRoute(string $name): ?Route`
+#### `getRoute(string $name): ?Route`
 Get the a named route.
-##### `getRoutes(): array`
+#### `getRoutes(): array`
 Get the defined routes.
-##### `run(array $arguments = [])`
+#### `run([array $arguments])`
 Run the router.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$arguments`|*array*|An associative array of extra arguments injected into the action function.<br>Arguments injected by default are: `$parameters`, `$request`, `$route`.|
-##### `setPrefix(string $prefix = null): Router`
+#### `setPrefix([string $prefix]): Router`
 Set a route prefix. The prefix is prepended to the path of every subsequent route.  
 Routes delcared prior to this method are not affected.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$prefix`|*string*|Optional.<br>The path prefix.<br>*NOTE: calling `->setPrefix()` without argument removes the prefix.*|
-##### `setFallback($action): Router`
+#### `setFallback($action): Router`
 Set an action that gets executed when no route match is found.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$action`|*mixed*|The fallback action.|
-##### `addRoute(Route $route): Router`
+#### `addRoute(Route $route): Router`
 Add a Route.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$route`|*Route*|The Route object.|
-##### `addRouteGroup(string $prefix, array $routes, array $middleware = null): Router`
+#### `addRouteGroup(string $prefix, array $routes, [array $middleware]): Router`
 Add multiple routes grouped by prefix.  
 Previously declared prefixes are prepended to the group prefix.  
 Subsequent routes are not affected by the group prefix.
@@ -282,17 +282,17 @@ Subsequent routes are not affected by the group prefix.
 |`$prefix`|*string*|The grouped routes prefix.|
 |`$routes`|*array*|The grouped routes.|
 |`$middleware`|*array*|An array of middleware applied to all routes in the group.|
-##### `run(array $arguments = [])`
+#### `run([array $arguments])`
 Run the route matching.
 |Argument|Type|Description|
 |:-|:-|:-|
 |`$arguments`|*array*|Associative array of arguments injected into the action function. Route attributes and path parameters are also injected as arguments.<br>Route attributes have precendence over run arguments.<br>Path parameters have precendence over Route attributes and run arguments.|
-##### `setRoute(string $path, $action, array $methods = [], string $name = null): Route`
+#### `setRoute(string $path, $action, [array $methods], [string $name]): Route`
 Adds a route and returns the Route object.  
 See [Route::__construct()](#route-methods) for details.
 
-#### **Router** Factory Methods
-##### `Router::create(array $config = [])`
+### **Router** Factory Methods
+#### `Router::create([array $config])`
 Create a new Router.
 |Argument|Type|Description|
 |:-|:-|:-|

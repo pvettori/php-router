@@ -15,9 +15,9 @@ trait RouteFactoryTrait
      *
      * @return Route
      */
-    public static function create(string $path, $action, array $methods = []): Route
+    public static function create(string $path, $action, array $methods = null): Route
     {
-        return new Route($path, $action, $methods);
+        return new Route($path, $action, $methods ?? []);
     }
 
     /**

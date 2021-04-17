@@ -25,7 +25,7 @@ class Route
      *                                 If empty then the route matches any method.
      * @param string          $name    [optional] A name for the route.
      */
-    public function __construct(string $path, $action, array $methods = [], string $name = null)
+    public function __construct(string $path, $action, array $methods = null, string $name = null)
     {
         if (!is_callable($action) && !is_string($action)) {
             throw new \InvalidArgumentException(sprintf(
@@ -36,7 +36,7 @@ class Route
 
         $methods = array_map(function ($method) {
             return strtoupper((string) $method);
-        }, $methods);
+        }, $methods ?? []);
 
         if (!empty($methods) && array_diff($methods, static::$allowedMethods)) {
             throw new \InvalidArgumentException(sprintf(
