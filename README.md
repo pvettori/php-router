@@ -1,5 +1,5 @@
 # PHP Router: app routing for humans
-[![Latest Version](https://img.shields.io/badge/version-0.1.6-orange)](https://github.com/pvettori/router/releases)
+[![Latest Version](https://img.shields.io/badge/version-0.1.7-orange)](https://github.com/pvettori/router/releases)
 [![PHP Version](https://img.shields.io/badge/php-%E2%89%A57.1-blue)](https://www.php.net/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](https://github.com/pvettori/router/blob/master/LICENSE)
 
