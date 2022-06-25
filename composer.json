@@ -1,7 +1,7 @@
 {
     "name": "pvettori/php-router",
     "description": "PHP Router: app routing for humans.",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "authors": [
         {
             "name": "Piero Vettori",
@@ -28,8 +28,8 @@
         }
     },
     "require": {
-        "guzzlehttp/guzzle": "^6.0||^7.4.3",
-        "guzzlehttp/psr7": "2.1.1",
+        "guzzlehttp/guzzle": "^6.5.8||^7.4.5",
+        "guzzlehttp/psr7": "^1.9||^2.4",
         "php": ">=7.1"
     },
     "require-dev": {
